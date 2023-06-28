@@ -25,13 +25,12 @@ type Meeple struct {
 	points  int
 }
 
-func New(tileRif *tile.Tile, role Role,
-	tilePosX int, tilePosY int, points int) Meeple {
+func New(role Role) Meeple {
 
 	return Meeple{
-		tileRif,
-		tilePosition{tilePosX, tilePosY},
+		nil,
+		tilePosition{-1, -1},
 		role,
-		points,
+		1,
 	}
 }

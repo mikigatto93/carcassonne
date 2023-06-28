@@ -1,4 +1,4 @@
-package gamemanager
+package game
 
 import (
 	"carcassonne/meeple"
@@ -8,14 +8,14 @@ import (
 
 type Board struct {
 	tiles   map[string]*tile.Tile
-	meeples map[string]*meeple.Meeple
+	meeples []*meeple.Meeple
 }
 
-func New() *Board {
+func NewBoard() *Board {
 	b := Board{}
 
 	b.tiles = make(map[string]*tile.Tile)
-	b.meeples = make(map[string]*meeple.Meeple)
+	b.meeples = make([]*meeple.Meeple, 24)
 
 	b.tiles["0;0"] = tile.New(0, 0, 0, tile.RiverStart)
 	return &b
@@ -36,8 +36,9 @@ func (b *Board) PlaceTile(x int, y int, t *tile.Tile) bool {
 	return ok
 }
 
-func (b *Board) PlaceMeeple() bool {
-
+func (b *Board) PlaceMeeple(m *meeple.Meeple) bool {
+	b.meeples = append(b.meeples, m)
+	return true
 }
 
 func (b *Board) getTile(x int, y int) (*tile.Tile, bool) {
