@@ -130,3 +130,11 @@ func (t *Tile) getSide(side int) ([]Terrain, error) {
 		return arr, errors.New("InvalidArgument: side must be between 0 and 3")
 	}
 }
+
+func (t *Tile) GetBoundariesBitField() []byte {
+	// 0: up, 1:right, 2:down, 3:left
+	bounds := []byte{byte(t.layout[0][2]), byte(t.layout[2][4]),
+		byte(t.layout[4][2]), byte(t.layout[2][0])}
+
+	return bounds
+}

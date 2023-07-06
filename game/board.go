@@ -7,8 +7,9 @@ import (
 )
 
 type Board struct {
-	tiles   map[string]*tile.Tile
-	meeples []*meeple.Meeple
+	tiles             map[string]*tile.Tile
+	meeples           []*meeple.Meeple
+	possibleNeighbors map[string][]byte
 }
 
 func NewBoard() *Board {
@@ -47,14 +48,67 @@ func (b *Board) getTile(x int, y int) (*tile.Tile, bool) {
 	return elem, ok
 }
 
+func (b *Board) getPossibleNeighborsBounds(x int, y int) ([]byte, bool) {
+	key := fmt.Sprintf("%d;%d", x, y)
+	elem, ok := b.possibleNeighbors[key]
+	return elem, ok
+}
+
 func (b *Board) getNeighbors(x int, y int) [4]*tile.Tile {
 	// 0: top, 1: right, 2: bottom, 3: left
 	// nil if it does not exists
 	arr := [4]*tile.Tile{}
-	for i := 0; i < 4; i++ {
-		if elem, err := b.getTile(x, y); err {
-			arr[i] = elem
-		}
+
+	if elem, err := b.getTile(x, y+1); err {
+		arr[0] = elem
 	}
+
+	if elem, err := b.getTile(x+1, y); err {
+		arr[1] = elem
+	}
+
+	if elem, err := b.getTile(x, y-1); err {
+		arr[2] = elem
+	}
+
+	if elem, err := b.getTile(x-1, y); err {
+		arr[3] = elem
+	}
+
 	return arr
+}
+
+func (b *Board) updatePossibleNeighbors(x int, y int, pos int, tile *tile.Tile) {
+	if elem, err := b.getPossibleNeighborsBounds(x, y); err {
+		elem[(pos+2)%4] = tile.GetBoundariesBitField()[pos]
+	} else {
+		boundBitField := []byte{0, 0, 0, 0}
+		boundBitField[(pos+2)%4] = tile.GetBoundariesBitField()[pos]
+		b.possibleNeighbors[fmt.Sprintf("%d;%d", x, y)] = boundBitField
+	}
+
+}
+
+func (b *Board) CalculatePossibleNeighbors(tile *tile.Tile, x int, y int) {
+	//remove the possible neighbor associated with the placed tile
+	delete(b.possibleNeighbors, fmt.Sprintf("%d;%d", x, y))
+
+	neighbors := b.getNeighbors(x, y)
+
+	if neighbors[0] == nil {
+		b.updatePossibleNeighbors(x, y+1, 0, tile)
+	}
+
+	if neighbors[1] == nil {
+		b.updatePossibleNeighbors(x+1, y, 1, tile)
+	}
+
+	if neighbors[2] == nil {
+		b.updatePossibleNeighbors(x, y-1, 2, tile)
+	}
+
+	if neighbors[3] == nil {
+		b.updatePossibleNeighbors(x-1, y, 3, tile)
+	}
+
 }

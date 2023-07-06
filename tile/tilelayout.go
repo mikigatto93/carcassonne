@@ -3,7 +3,7 @@ package tile
 type Terrain int
 
 const (
-	Grass Terrain = iota
+	Grass Terrain = +1 // 0 is used as absence of a value
 	City
 	Street
 	Water
