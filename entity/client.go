@@ -2,6 +2,7 @@ package entity
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/gorilla/websocket"
@@ -9,19 +10,19 @@ import (
 
 type Client struct {
 	Connection *websocket.Conn
-	Output     chan Event
+	Output     chan ResponseEvent
 }
 
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
 		conn,
-		make(chan Event),
+		make(chan ResponseEvent),
 	}
 }
 
 func (c *Client) ReadMessages(
 	onError func(*Client),
-	onMessage func(Event, *Client) error,
+	onMessage func(RequestEvent, *Client) error,
 ) {
 
 	defer onError(c)
@@ -36,7 +37,7 @@ func (c *Client) ReadMessages(
 			break
 		}
 
-		var req Event
+		var req RequestEvent
 		if err := json.Unmarshal(payload, &req); err != nil {
 			log.Println("error marshalling message: ", err)
 			break
@@ -66,6 +67,7 @@ func (c *Client) WriteMessages(onError func(*Client)) {
 			}
 
 			data, err := json.Marshal(message)
+			fmt.Println(string(data))
 			if err != nil {
 				log.Println("cannot send message: ", err)
 				return
@@ -79,4 +81,8 @@ func (c *Client) WriteMessages(onError func(*Client)) {
 		}
 	}
 
+}
+
+func (c *Client) SendEvent(event ResponseEvent) {
+	c.Output <- event
 }

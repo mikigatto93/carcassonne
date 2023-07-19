@@ -1,28 +1,49 @@
 package tile
 
-type Terrain int
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
+)
+
+type Terrain uint8
 
 const (
-	Grass Terrain = +1 // 0 is used as absence of a value
+	Grass Terrain = 1 // 0 is used as absence of a value
 	City
 	Street
 	Water
+	Monastery
 )
 
-type TileLayout [5][5]Terrain
+type TileLayout [][]Terrain
+type tileFileStructureElem = struct {
+	Quantity uint8      `json:"quantity"`
+	Layout   TileLayout `json:"layout"`
+}
+type tileFileStructure map[string]tileFileStructureElem
 
-var Base TileLayout = TileLayout{
-	{Grass, Grass, Grass, Grass, Grass},
-	{Grass, Grass, Grass, Grass, Grass},
-	{Grass, Grass, Grass, Grass, Grass},
-	{Grass, Grass, Grass, Grass, Grass},
-	{Grass, Grass, Grass, Grass, Grass},
+var TileData tileFileStructure = make(tileFileStructure)
+
+func parseTileLayoutFile(path string, jsonBody *tileFileStructure) {
+	jsonFile, err := os.Open(path)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	jsonErr := json.Unmarshal(byteValue, jsonBody)
+	if jsonErr != nil {
+		fmt.Printf("%v", jsonErr)
+	}
 }
 
-var RiverStart TileLayout = TileLayout{
-	{Grass, Grass, Grass, Grass, Grass},
-	{Grass, Water, Water, Water, Grass},
-	{Water, Water, Water, Water, Grass},
-	{Grass, Water, Water, Water, Grass},
-	{Grass, Grass, Grass, Grass, Grass},
+func LoadAllTilesets() {
+	parseTileLayoutFile("River1.json", &TileData)
+	//fmt.Println(TileLayouts)
 }

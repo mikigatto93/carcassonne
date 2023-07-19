@@ -9,16 +9,15 @@ import (
 type Board struct {
 	tiles             map[string]*tile.Tile
 	meeples           []*meeple.Meeple
-	possibleNeighbors map[string][]byte
+	possibleNeighbors map[string][]int8
 }
 
 func NewBoard() *Board {
-	b := Board{}
-
-	b.tiles = make(map[string]*tile.Tile)
-	b.meeples = make([]*meeple.Meeple, 24)
-
-	b.tiles["0;0"] = tile.New(0, 0, 0, tile.RiverStart)
+	b := Board{
+		tiles:             make(map[string]*tile.Tile),
+		meeples:           make([]*meeple.Meeple, 24),
+		possibleNeighbors: make(map[string][]int8),
+	}
 	return &b
 }
 
@@ -31,7 +30,9 @@ func (b *Board) PlaceTile(x int, y int, t *tile.Tile) bool {
 	}
 
 	if ok {
+		t.SetPosition(x, y)
 		b.tiles[fmt.Sprintf("%d;%d", x, y)] = t
+		b.calculatePossibleNeighbors(t, x, y)
 	}
 
 	return ok
@@ -48,7 +49,7 @@ func (b *Board) getTile(x int, y int) (*tile.Tile, bool) {
 	return elem, ok
 }
 
-func (b *Board) getPossibleNeighborsBounds(x int, y int) ([]byte, bool) {
+func (b *Board) getPossibleNeighborsBounds(x int, y int) ([]int8, bool) {
 	key := fmt.Sprintf("%d;%d", x, y)
 	elem, ok := b.possibleNeighbors[key]
 	return elem, ok
@@ -78,37 +79,38 @@ func (b *Board) getNeighbors(x int, y int) [4]*tile.Tile {
 	return arr
 }
 
-func (b *Board) updatePossibleNeighbors(x int, y int, pos int, tile *tile.Tile) {
+func (b *Board) updatePossibleNeighbors(x int, y int, pos int, t *tile.Tile) {
+	oppositePos := (pos + 2) % 4
 	if elem, err := b.getPossibleNeighborsBounds(x, y); err {
-		elem[(pos+2)%4] = tile.GetBoundariesBitField()[pos]
+		elem[oppositePos] = t.GetBoundariesBitField()[pos]
 	} else {
-		boundBitField := []byte{0, 0, 0, 0}
-		boundBitField[(pos+2)%4] = tile.GetBoundariesBitField()[pos]
+		boundBitField := []int8{0, 0, 0, 0}
+		boundBitField[oppositePos] = t.GetBoundariesBitField()[pos]
 		b.possibleNeighbors[fmt.Sprintf("%d;%d", x, y)] = boundBitField
 	}
 
 }
 
-func (b *Board) CalculatePossibleNeighbors(tile *tile.Tile, x int, y int) {
+func (b *Board) calculatePossibleNeighbors(t *tile.Tile, x int, y int) {
 	//remove the possible neighbor associated with the placed tile
 	delete(b.possibleNeighbors, fmt.Sprintf("%d;%d", x, y))
 
 	neighbors := b.getNeighbors(x, y)
 
 	if neighbors[0] == nil {
-		b.updatePossibleNeighbors(x, y+1, 0, tile)
+		b.updatePossibleNeighbors(x, y+1, 0, t)
 	}
 
 	if neighbors[1] == nil {
-		b.updatePossibleNeighbors(x+1, y, 1, tile)
+		b.updatePossibleNeighbors(x+1, y, 1, t)
 	}
 
 	if neighbors[2] == nil {
-		b.updatePossibleNeighbors(x, y-1, 2, tile)
+		b.updatePossibleNeighbors(x, y-1, 2, t)
 	}
 
 	if neighbors[3] == nil {
-		b.updatePossibleNeighbors(x-1, y, 3, tile)
+		b.updatePossibleNeighbors(x-1, y, 3, t)
 	}
 
 }

@@ -42,7 +42,7 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	client := entity.NewClient(conn)
 
-	log.Println("New connection2")
+	log.Println("New connection")
 
 	m.addClient(client)
 	go client.ReadMessages(m.RemoveClient, m.RouteEvent)
@@ -66,7 +66,7 @@ func (m *Manager) RemoveClient(client *entity.Client) {
 	}
 }
 
-func (m *Manager) RouteEvent(event entity.Event, client *entity.Client) error {
+func (m *Manager) RouteEvent(event entity.RequestEvent, client *entity.Client) error {
 	if handler, ok := game.GameEventHandlerMap[event.Type]; ok {
 		if err := handler(m.game, event, client); err != nil {
 			log.Printf("Error in event handler %s: %v", event.Type, err)

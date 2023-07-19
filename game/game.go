@@ -21,6 +21,8 @@ func New() *Game {
 		make(map[*entity.Client]*entity.Player, MaxNumOfPlayers),
 	}
 
+	g.deck.Fill()
+
 	return &g
 }
 
@@ -46,4 +48,30 @@ func (g *Game) RemovePlayerById(id string) {
 func (g *Game) RemovePlayerByClient(client *entity.Client) {
 	// Client connection is not closed
 	delete(g.players, client)
+}
+
+func (g *Game) GetPlayerByOrder(order uint8) (*entity.Client, *entity.Player) {
+	for client, player := range g.players {
+		if player.Order == order {
+			return client, player
+		}
+	}
+	return nil, nil
+}
+
+func (g *Game) PlaceStartingTile() {
+	t := g.deck.DrawById("River1-0")
+	g.board.PlaceTile(0, 0, t)
+}
+
+func (g *Game) BroadcastEvent(event entity.ResponseEvent) {
+	for client, _ := range g.players {
+		client.SendEvent(event)
+	}
+}
+
+func (g *Game) GetNextTurnPlayer() (*entity.Client, *entity.Player) {
+	client, player := g.GetPlayerByOrder(uint8(g.turn % len(g.players)))
+	g.turn++
+	return client, player
 }
